@@ -1,4 +1,4 @@
-startStream('container', window.location.protocol.replace(/http/, 'ws')+'//'+window.location.hostname+':8081', true, 'auto', 2000)
+startStream('container', 'ws://127.0.0.1:18888/consumer?stream_id=test', true, 'auto', 2000)
 
 function startStream(playerId, wsUri, useWorker, webgl, reconnectMs) {
 	if (!window.player) {
