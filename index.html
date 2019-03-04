@@ -39,15 +39,15 @@
       playing: false,
       socket: null,
 
-      initializePlayer(workerFile, webglMode, withDebugger) {
+      initializePlayer(workerFile, webglMode, withDebugger, width, height) {
         if (!window.player) {
           window.player = new Player({
             workerFile: workerFile,
             useWorker: (workerFile) ? true : false,
             webgl: webglMode,
             size: {
-              width: 640,
-              height: 480
+              width: width,
+              height: height
             }
           });
 
@@ -172,7 +172,7 @@
       }
     }
 
-    kochvisio.initializePlayer('./vendor/javascripts/decoder.js', 'auto', true);
+    kochvisio.initializePlayer('./vendor/javascripts/decoder.js', 'auto', true, 640, 480);
     kochvisio.startStream('ws://127.0.0.1:3060/atlas/socket/test/consumer', 2000);
   </script>
 </body>
