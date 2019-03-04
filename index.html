@@ -55,7 +55,7 @@
 
           if (withDebugger) {
             document.getElementById('debugger').style.display = 'block';
-            window.debugger = new kochvisio.streamDebugger();
+            window.visioDebugger = new kochvisio.streamDebugger();
           }
         }
       },
@@ -78,7 +78,7 @@
 
           kochvisio.socket.onmessage = function (msg) {
             window.player.decode(new Uint8Array(appendSeparator(msg.data)));
-            if(window.debugger) window.debugger.nal(msg.data.byteLength);
+            if(window.visioDebugger) window.visioDebugger.nal(msg.data.byteLength);
           }
         }
 
@@ -114,7 +114,7 @@
 
         this.statsElement = document.getElementById('debugger');
         window.player.onPictureDecoded = function(buffer, width, height, infos) {
-          window.debugger.frame(width, height);
+          window.visioDebugger.frame(width, height);
         }
 
         this.nal = function(bytes) {
@@ -127,24 +127,24 @@
           this.playerWidth = w;
           this.playerHeight = h;
           this.frames++;
-          var now = +new Date(), delta = now - window.debugger.last;
+          var now = +new Date(), delta = now - window.visioDebugger.last;
           this.fps.tick(delta);
           this.last = now;
         }
 
         setInterval(function() {
-          var mib = (window.debugger.total/1048576).toFixed(2);
+          var mib = (window.visioDebugger.total/1048576).toFixed(2);
           var date = new Date(null);
-          date.setSeconds((+new Date()-window.debugger.started)/1000);
+          date.setSeconds((+new Date()-window.visioDebugger.started)/1000);
           var dur = date.toISOString().substr(11, 8);
           
-          window.debugger.statsElement.innerHTML =
-            window.debugger.playerWidth+'x'+window.debugger.playerHeight+', '+
-            Math.floor(1/window.debugger.fps.avg()*1000)+' fps, '+
-            (window.debugger.secondTotal/1024).toFixed(2)+' KiB/s, total '+mib+' MiB, '+
-            window.debugger.nals+' NAL units, '+window.debugger.frames+' frames in '+dur;
+          window.visioDebugger.statsElement.innerHTML =
+            window.visioDebugger.playerWidth+'x'+window.visioDebugger.playerHeight+', '+
+            Math.floor(1/window.visioDebugger.fps.avg()*1000)+' fps, '+
+            (window.visioDebugger.secondTotal/1024).toFixed(2)+' KiB/s, total '+mib+' MiB, '+
+            window.visioDebugger.nals+' NAL units, '+window.visioDebugger.frames+' frames in '+dur;
           
-          window.debugger.secondTotal = 0;
+          window.visioDebugger.secondTotal = 0;
         }, 1000)
       },
 
@@ -171,7 +171,7 @@
       }
     }
 
-    kochvisio.initializePlayer('./vendor/javascripts/decoder.js', 'auto', true);
+    kochvisio.initializePlayer('./vendor/javascripts/decoder.js', 'auto', false);
     kochvisio.startStream('ws://127.0.0.1:3060/atlas/socket/test/consumer', 2000);
   </script>
 </body>
