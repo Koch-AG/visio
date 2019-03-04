@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset='utf-8'>
+  <meta charset="utf-8">
 
   <style type="text/css">
     body {
@@ -42,22 +42,6 @@
           else if(window.player.canvas.mozRequestFullScreen) window.player.canvas.mozRequestFullScreen();
         })
         window.debugger = new debug(playerId) //show statistics, you can remove me if you dont need stats
-      }
-      document.addEventListener('webkitfullscreenchange', exitHandler, false);
-      document.addEventListener('mozfullscreenchange', exitHandler, false);
-      document.addEventListener('fullscreenchange', exitHandler, false);
-      document.addEventListener('MSFullscreenChange', exitHandler, false);
-
-      function exitHandler() {
-              if(document.fullScreenElement || document.webkitCurrentFullScreenElement || document.mozFullScreenElement) {
-          window.player.canvas.style.width = '100vw'
-          window.player.canvas.style.marginBottom = '0'
-          window.player.canvas.style.border = '0'
-        } else {
-          window.player.canvas.style.width = ''
-          window.player.canvas.style.marginBottom = '20px'
-          window.player.canvas.style.border = '1px solid #eee'
-        }
       }
 
       var separator = new Uint8Array([0, 0, 0, 1])
