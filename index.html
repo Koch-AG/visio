@@ -52,6 +52,7 @@
           });
 
           document.getElementById('container').appendChild(window.player.canvas);
+          window.player.canvas.style.opacity = 0;
 
           if (withDebugger) {
             document.getElementById('debugger').style.display = 'block';

@@ -46,6 +46,9 @@
     
     parOptions = parOptions || {};
     
+    // Hack by GES to not show default black canvas before rendering
+    if (window.player) window.player.canvas.style.opacity = 1;
+
     this.canvasElement = parOptions.canvas || document.createElement("canvas");
     this.contextOptions = parOptions.contextOptions;
     
