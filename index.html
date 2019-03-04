@@ -8,11 +8,7 @@
       margin: 0;
       padding: 9;
       background: #FFFFFF;
-
-      text-align: center;
       font-family: Arial, Helvetica, sans-serif;
-      font-weight: 300;
-      letter-spacing: .15em;
     }
 
     #debugger {
@@ -20,6 +16,9 @@
       position: fixed;
       top: 0;
       left: 0;
+      color: #FF0000;
+      font-size: 0.9em;
+      background: #FFFFFF;
     }
   </style>
 
@@ -40,7 +39,7 @@
       playing: false,
       socket: null,
 
-      initializePlayer(workerFile, webglMode) {
+      initializePlayer(workerFile, webglMode, withDebugger) {
         if (!window.player) {
           window.player = new Player({
             workerFile: workerFile,
@@ -53,7 +52,11 @@
           });
 
           document.getElementById('container').appendChild(window.player.canvas);
-          window.debugger = new debug('container');
+
+          if (withDebugger) {
+            document.getElementById('debugger').style.display = 'block';
+            window.debugger = new kochvisio.streamDebugger();
+          }
         }
       },
 
@@ -98,74 +101,78 @@
         kochvisio.socket.close();
       },
 
-      startDebugger() {
-        kochvisio.debugger.style.display = 'block';
+      streamDebugger: function() {
+        this.fps = new kochvisio.fpsCalculator(50);
+        this.started = +new Date();
+        this.last = +new Date();
+        this.nals = 0;
+        this.total = 0;
+        this.frames = 0;
+        this.secondTotal = 0;
+        this.playerWidth = 0;
+        this.playerHeight = 0;
+
+        this.statsElement = document.getElementById('debugger');
+        window.player.onPictureDecoded = function(buffer, width, height, infos) {
+          window.debugger.frame(width, height);
+        }
+
+        this.nal = function(bytes) {
+          this.nals++;
+          this.total += bytes;
+          this.secondTotal += bytes;
+        }
+
+        this.frame = function(w, h) {
+          this.playerWidth = w;
+          this.playerHeight = h;
+          this.frames++;
+          var now = +new Date(), delta = now - window.debugger.last;
+          this.fps.tick(delta);
+          this.last = now;
+        }
+
+        setInterval(function() {
+          var mib = (window.debugger.total/1048576).toFixed(2);
+          var date = new Date(null);
+          date.setSeconds((+new Date()-window.debugger.started)/1000);
+          var dur = date.toISOString().substr(11, 8);
+          
+          window.debugger.statsElement.innerHTML =
+            window.debugger.playerWidth+'x'+window.debugger.playerHeight+', '+
+            Math.floor(1/window.debugger.fps.avg()*1000)+' fps, '+
+            (window.debugger.secondTotal/1024).toFixed(2)+' KiB/s, total '+mib+' MiB, '+
+            window.debugger.nals+' NAL units, '+window.debugger.frames+' frames in '+dur;
+          
+          window.debugger.secondTotal = 0;
+        }, 1000)
       },
 
-      stopDebugger() {
-        kochvisio.debugger.style.direction = 'none';
+      fpsCalculator: function(length) {
+        this.length = length;
+        this.index = 0;
+        this.sum = 0;
+
+        this.buffer = Array.apply(null, Array(length)).map(Number.prototype.valueOf,0);
+        
+        this.tick = function(tick) {
+          this.sum -= this.buffer[this.index];
+          this.sum += tick;
+          this.buffer[this.index] = tick;
+          if (++this.index == this.length) this.index = 0;
+          return Math.floor(this.sum/this.length);
+        }
+
+        this.avg = function() {
+          return Math.floor(this.sum/this.length);
+        }
+
+        return this;
       }
     }
 
-    kochvisio.initializePlayer('./vendor/javascripts/decoder.js', 'auto');
+    kochvisio.initializePlayer('./vendor/javascripts/decoder.js', 'auto', true);
     kochvisio.startStream('ws://127.0.0.1:3060/atlas/socket/test/consumer', 2000);
-
-    // debugger stuff
-    function avgFPS(length) {
-      this.index = 0
-      this.sum = 0
-      this.length = length
-      this.buffer = Array.apply(null, Array(length)).map(Number.prototype.valueOf,0);
-      this.tick = function(tick) {
-        this.sum -= this.buffer[this.index]
-        this.sum += tick
-        this.buffer[this.index] = tick
-        if (++this.index == this.length) this.index = 0
-        return Math.floor(this.sum/this.length)
-      }
-      this.avg = function() {
-        return Math.floor(this.sum/this.length)
-      }
-      return this
-    }
-
-    function debug(playerId) {
-      this.started = +new Date()
-      this.fps = new avgFPS(50)
-      this.last = +new Date()
-      this.nals = 0
-      this.frames = 0
-      this.total = 0
-      this.secondTotal = 0
-      this.playerWidth = 0
-      this.playerHeight = 0
-      this.statsElement = document.createElement('div')
-      document.getElementById(playerId).appendChild(this.statsElement)
-      window.player.onPictureDecoded = function(buffer, width, height, infos) {
-        window.debugger.frame(width, height)
-      }
-      this.nal = function(bytes) {
-        this.nals++
-        this.total += bytes
-        this.secondTotal += bytes
-      }
-      this.frame = function(w, h) {
-        this.playerWidth = w
-        this.playerHeight = h
-        this.frames++
-        var now = +new Date(), delta = now - window.debugger.last
-        this.fps.tick(delta)
-        this.last = now
-      }
-      setInterval(function() {
-        var mib = (window.debugger.total/1048576).toFixed(2)
-        var date = new Date(null)
-        date.setSeconds((+new Date()-window.debugger.started)/1000)
-        var dur = date.toISOString().substr(11, 8)
-        window.debugger.statsElement.innerHTML = window.debugger.playerWidth+'x'+window.debugger.playerHeight+', '+Math.floor(1/window.debugger.fps.avg()*1000)+' fps, '+(window.debugger.secondTotal/1024).toFixed(2)+' KiB/s, total '+mib+' MiB, '+window.debugger.nals+' NAL units, '+window.debugger.frames+' frames in '+dur
-        window.debugger.secondTotal = 0
-      }, 1000)
-    }
   </script>
 </body>
 </html>
