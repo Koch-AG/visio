@@ -5,69 +5,110 @@
 
   <style type="text/css">
     body {
-      background: #050505;
+      margin: 0;
+      padding: 9;
+      background: #FFFFFF;
+
       text-align: center;
       font-family: Arial, Helvetica, sans-serif;
       font-weight: 300;
       letter-spacing: .15em;
-      color: #fff;
     }
 
-    canvas {
-      border: 1px solid #eee;
-      margin-bottom: 20px;
+    #debugger {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
     }
   </style>
 
   <title>kochvisio</title>
 </head>
 <body>
-  <div id='container'></div>
+  <div id="debugger"></div>
+  <div id="container"></div>
 
   <script src='vendor/javascripts/decoder.js'></script>
   <script src='vendor/javascripts/yuvcanvas.js'></script>
   <script src='vendor/javascripts/player.js'></script>
 
   <script>
-    startStream('container', 'ws://127.0.0.1:3060/atlas/socket/test/consumer', true, 'auto', 2000)
+    var kochvisio = {
+      container: document.getElementById('container'),
+      debugger: document.getElementById('debugger'),
+      playing: false,
+      socket: null,
 
-    function startStream(playerId, wsUri, useWorker, webgl, reconnectMs) {
-      if (!window.player) {
-        window.player = new Player({ useWorker: useWorker, webgl: webgl, size: { width: 848, height: 480 } })
-        var playerElement = document.getElementById(playerId)
-        playerElement.appendChild(window.player.canvas)
-        window.player.canvas.addEventListener('dblclick', function() {
-          if(window.player.canvas.requestFullScreen) window.player.canvas.requestFullScreen();
-          else if(window.player.canvas.webkitRequestFullScreen) window.player.canvas.webkitRequestFullScreen();
-          else if(window.player.canvas.mozRequestFullScreen) window.player.canvas.mozRequestFullScreen();
-        })
-        window.debugger = new debug(playerId) //show statistics, you can remove me if you dont need stats
-      }
+      initializePlayer(workerFile, webglMode) {
+        if (!window.player) {
+          window.player = new Player({
+            workerFile: workerFile,
+            useWorker: (workerFile) ? true : false,
+            webgl: webglMode,
+            size: {
+              width: 640,
+              height: 480
+            }
+          });
 
-      var separator = new Uint8Array([0, 0, 0, 1])
-      function addSeparator(buffer) {
-        var tmp = new Uint8Array(4+buffer.byteLength)
-        tmp.set(separator, 0)
-        tmp.set(new Uint8Array(buffer), 4)
-        return tmp.buffer
-      }
-
-      var ws = new WebSocket(wsUri)
-      ws.binaryType = 'arraybuffer'
-      ws.onopen = function (e) {
-        console.log('websocket connected')
-        ws.onmessage = function (msg) {
-          window.player.decode(new Uint8Array(addSeparator(msg.data)))
-          if(window.debugger) window.debugger.nal(msg.data.byteLength)
+          document.getElementById('container').appendChild(window.player.canvas);
+          window.debugger = new debug('container');
         }
-      }
-      ws.onclose = function (e) {
-        console.log('websocket disconnected')
-        if (reconnectMs > 0) {
-          setTimeout(function() { startStream(playerId, wsUri, useWorker, webgl, reconnectMs) }, reconnectMs)
+      },
+
+      startStream(streamLink, reconnectTimeout) {
+        var separator = new Uint8Array([0, 0, 0, 1]);
+        function appendSeparator(buffer) {
+          var tmp = new Uint8Array(4+buffer.byteLength);
+          tmp.set(separator, 0);
+          tmp.set(new Uint8Array(buffer), 4);
+          return tmp.buffer;
         }
+
+        kochvisio.socket = new WebSocket(streamLink);
+        kochvisio.socket.binaryType = 'arraybuffer'
+        kochvisio.playing = true;
+
+        kochvisio.socket.onopen = function (e) {
+          console.log('kochvisio: websocket connected');
+
+          kochvisio.socket.onmessage = function (msg) {
+            window.player.decode(new Uint8Array(appendSeparator(msg.data)));
+            if(window.debugger) window.debugger.nal(msg.data.byteLength);
+          }
+        }
+
+        kochvisio.socket.onclose = function (e) {
+          console.log('kochvisio: websocket disconnected');
+
+          if (kochvisio.playing && reconnectTimeout > 0) {
+            setTimeout(function() {
+              console.log('kochvisio: reconnecting in ' + reconnectTimeout);
+              kochvisio.startStream(streamLink, reconnectTimeout);
+            }, reconnectTimeout)
+          }
+
+          kochvisio.playing = false;
+        }
+      },
+
+      stopStream() {
+        kochvisio.playing = false;
+        kochvisio.socket.close();
+      },
+
+      startDebugger() {
+        kochvisio.debugger.style.display = 'block';
+      },
+
+      stopDebugger() {
+        kochvisio.debugger.style.direction = 'none';
       }
     }
+
+    kochvisio.initializePlayer('./vendor/javascripts/decoder.js', 'auto');
+    kochvisio.startStream('ws://127.0.0.1:3060/atlas/socket/test/consumer', 2000);
 
     // debugger stuff
     function avgFPS(length) {
