@@ -1,34 +1,31 @@
-# visio
-Ultra fast live streaming raw h264 from Raspberry Pi to multiple browser
-clients with Node, websockets and
-[Broadway](https://github.com/mbebenita/Broadway). The latency on LAN at 25fps
-is about 4 frames or 160ms.
+# kochvisio
+Fork of [Dregu/visio](https://github.com/Dregu/visio). WebAssembly based H.264 decoder and viewer for usage in a browser or webframe.
 
-## Installation
+### API
+#### `kochvisio.initializePlayer(decoder, webgl, debugger, width, height)`
+Initializes the player, this needs to be done once after loading the page.   
+Example: `kochvisio.initializePlayer('./vendor/javascripts/decoder.js', 'auto', true, 640, 480)`   
+Params:
+* `decoder`: Path to the decoder that should be used
+* `webgl` WebGL mode that should be used
+* `debugger` Whether or not the debugger should run
+* `width` Width of the player, should match expected stream
+* `height` Height of the player, should match expected stream
+
+#### `kochvisio.startStream(streamLink, reconnectTimeout)`
+Start consuming a video strem from the given link.    
+Example: `kochvisio.startStream('ws://127.0.0.1:3060/atlas/socket/test/consumer', 2000)`    
+Params:
+* `streamLink` Link to the stream websocket
+* `reconnectTimeout` Timeout for ws reconnect (0=off)
+
+#### `kochVisio.stopStream()`
+Stop the running video stream.    
+Example: `kochvisio.stopStream()`     
+
+### Example
+Testing a stream that is relayed locally by johnson running outside of docker:
 ```
-npm install
+kochvisio.initializePlayer('./vendor/javascripts/decoder.js', 'auto', true, 640, 480);
+kochvisio.startStream('ws://127.0.0.1:3060/atlas/socket/test/consumer', 2000);
 ```
-If you are going to use UDP, also install socat.
-```
-apt install socat
-```
-Tested on RPI1, raspbian jessie and node v7.4.0.
-
-## Server
-Receives h264 stream from raspivid and serves it to websocket clients.
-Start with ```node index.js --udpport 8000 --wsport 8081``` for UDP mode
-or ```node index.js --tcpport 8000 --wsport 8081``` for TCP mode.
-
-## Streamer
-Streams live h264 from raspivid (or gstreamer) to the server. Check raspi.sh
-and start with ```./raspi.sh```. You could use something like
-```ffmpeg -re -i foo.mp4 -c:v copy -f h264 udp://localhost:8000```
-to stream anything, just remember Broadway only supports h264 baseline and
-no audio.
-
-## HTTP-server
-You should get one. Tested with ```http-server``` from npm.
-
-## Client
-Minimal client is now running at ```http://server-ip:8080/```.
-Works on most things with canvas and websockets.
