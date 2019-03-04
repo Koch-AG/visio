@@ -23,3 +23,9 @@ Params:
 Stop the running video stream.    
 Example: `kochvisio.stopStream()`     
 
+### Example
+Testing a stream that is relayed locally by johnson running outside of docker:
+```
+kochvisio.initializePlayer('./vendor/javascripts/decoder.js', 'auto', true, 640, 480);
+kochvisio.startStream('ws://127.0.0.1:3060/atlas/socket/test/consumer', 2000);
+```
