@@ -36,6 +36,7 @@
     var kochvisio = {
       container: document.getElementById('container'),
       debugger: document.getElementById('debugger'),
+      reconnectTimeout: null,
       playing: false,
       socket: null,
 
@@ -77,8 +78,15 @@
           console.log('kochvisio: websocket connected');
 
           kochvisio.socket.onmessage = function (msg) {
-            window.player.decode(new Uint8Array(appendSeparator(msg.data)));
-            if(window.visioDebugger) window.visioDebugger.nal(msg.data.byteLength);
+            if (msg.data.replace == undefined) {
+              window.player.decode(new Uint8Array(appendSeparator(msg.data)));
+              if(window.visioDebugger) window.visioDebugger.nal(msg.data.byteLength);
+            } else {
+              if (msg.data == 'invalid.stream') {
+                console.log('kochvisio: server returned invalid.stream');
+                kochvisio.stopStream();
+              }
+            }
           }
         }
 
@@ -86,7 +94,7 @@
           console.log('kochvisio: websocket disconnected');
 
           if (kochvisio.playing && reconnectTimeout > 0) {
-            setTimeout(function() {
+            kochvisio.reconnectTimeout = setTimeout(function() {
               console.log('kochvisio: reconnecting in ' + reconnectTimeout);
               kochvisio.startStream(streamLink, reconnectTimeout);
             }, reconnectTimeout)
@@ -97,8 +105,9 @@
       },
 
       stopStream() {
+        if (kochvisio.socket) kochvisio.socket.close();
+        clearTimeout(kochvisio.reconnectTimeout);
         kochvisio.playing = false;
-        kochvisio.socket.close();
       },
 
       streamDebugger: function() {
