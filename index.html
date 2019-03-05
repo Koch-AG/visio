@@ -62,14 +62,6 @@
       },
 
       startStream(streamLink, reconnectTimeout) {
-        var separator = new Uint8Array([0, 0, 0, 1]);
-        function appendSeparator(buffer) {
-          var tmp = new Uint8Array(4+buffer.byteLength);
-          tmp.set(separator, 0);
-          tmp.set(new Uint8Array(buffer), 4);
-          return tmp.buffer;
-        }
-
         kochvisio.socket = new WebSocket(streamLink);
         kochvisio.socket.binaryType = 'arraybuffer'
         kochvisio.playing = true;
@@ -79,7 +71,7 @@
 
           kochvisio.socket.onmessage = function (msg) {
             if (msg.data.replace == undefined) {
-              window.player.decode(new Uint8Array(appendSeparator(msg.data)));
+              window.player.decode(new Uint8Array(msg.data));
               if(window.visioDebugger) window.visioDebugger.nal(msg.data.byteLength);
             } else {
               if (msg.data == 'invalid.stream') {
