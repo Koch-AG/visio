@@ -1,5 +1,5 @@
 # kochvisio
-Fork of [Dregu/visio](https://github.com/Dregu/visio). WebAssembly based H.264 baseline decoder and viewer for usage in a browser or webframe.
+Fork of [Dregu/visio](https://github.com/Dregu/visio). WebAssembly based H.264 baseline decoder and viewer for usage in a browser or webframe. It only supports H.264 baseline and only unwrapped, raw, NAL frames.
 
 ### API
 #### `kochvisio.initializePlayer(useWorker, webgl, debugger, width, height)`
@@ -24,8 +24,16 @@ Stop the running video stream.
 Example: `kochvisio.stopStream()`     
 
 ### Example
-Testing a stream that is relayed locally by johnson running outside of docker:
+Testing a stream when using on a server (e.g. node `http-server`)
 ```
 kochvisio.initializePlayer(true, 'auto', true, 640, 480);
-kochvisio.startStream('ws://127.0.0.1:3060/atlas/socket/test/consumer', 2000);
+kochvisio.startStream('ws://127.0.0.1:3060/socket/test/consumer', 2000);
+```
+
+Using in production on mobile
+```
+// Assuming we're using mobile.html, built by bin/build
+// Note that NO webworker is used in this use case!
+kochvisio.initializePlayer(false, 'auto', true, 640, 480);
+kochvisio.startStream('ws://127.0.0.1:3060/socket/test/consumer', 2000);
 ```
