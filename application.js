@@ -29,11 +29,11 @@ var kochvisio = {
   playing: false,
   socket: null,
 
-  initializePlayer: function(webglMode, withDebugger, width, height) {
+  initializePlayer: function(useWorker, webglMode, withDebugger, width, height) {
     if (!window.player) {
       window.player = new Player({
         workerFile: './vendor/javascripts/decoder.js',
-        useWorker: true,
+        useWorker: useWorker,
         webgl: webglMode,
         size: {
           width: width,

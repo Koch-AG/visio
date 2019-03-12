@@ -1,0 +1,33 @@
+#!/bin/bash
+#
+# Maintainer: Sven Gehring <sgehring@kochag.ch>
+#
+# For using kochvisio in a mobile application, it is easiest to have a single
+# file that can be loaded byte-wise as is. Thus, this simple build script will
+# 'bundle' all resources into a single file. Yes, we could've used webpackt...
+
+OUTFILE="./mobile.html"
+[[ "$1" != "" ]] && OUTFILE="$1"
+
+if [[ "$(which uglifyjs)" == "" ]]; then
+  echo "uglifyjs not installed. Install via npm using 'npm install -g uglify-js'"
+  exit 1
+fi
+
+JS=$(uglifyjs \
+  ./vendor/javascripts/decoder.js \
+  ./vendor/javascripts/yuvcanvas.js \
+  ./vendor/javascripts/player.js \
+  ./application.js \
+  --compress)
+
+INDEX=$(sed "/<script/d" ./index.html | sed -n '/!!BUNDLE!!/q;p')
+
+echo "$INDEX" > "$OUTFILE"
+echo "  <script>" >> "$OUTFILE"
+echo "$JS" >> "$OUTFILE"
+echo "  </script>" >> "$OUTFILE"
+echo "</body>" >> "$OUTFILE"
+echo "</html>" >> "$OUTFILE"
+
+echo "Wrote output to $OUTFILE"

@@ -2,10 +2,11 @@
 Fork of [Dregu/visio](https://github.com/Dregu/visio). WebAssembly based H.264 baseline decoder and viewer for usage in a browser or webframe.
 
 ### API
-#### `kochvisio.initializePlayer(decoder, webgl, debugger, width, height)`
+#### `kochvisio.initializePlayer(useWorker, webgl, debugger, width, height)`
 Initializes the player, this needs to be done once after loading the page.   
-Example: `kochvisio.initializePlayer('auto', true, 640, 480)`   
+Example: `kochvisio.initializePlayer(true, 'auto', true, 640, 480)`   
 Params:
+* `useWorker` Wether or not to use Web Worker 
 * `webgl` WebGL mode that should be used
 * `debugger` Whether or not the debugger should run
 * `width` Width of the player, should match expected stream
@@ -25,6 +26,6 @@ Example: `kochvisio.stopStream()`
 ### Example
 Testing a stream that is relayed locally by johnson running outside of docker:
 ```
-kochvisio.initializePlayer('auto', true, 640, 480);
+kochvisio.initializePlayer(true, 'auto', true, 640, 480);
 kochvisio.startStream('ws://127.0.0.1:3060/atlas/socket/test/consumer', 2000);
 ```
