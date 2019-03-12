@@ -34,6 +34,6 @@ Using in production on mobile
 ```
 // Assuming we're using mobile.html, built by bin/build
 // Note that NO webworker is used in this use case!
-kochvisio.initializePlayer(false, 'auto', true, 640, 480);
+kochvisio.initializePlayer(false, 'auto', false, 640, 480);
 kochvisio.startStream('ws://127.0.0.1:3060/socket/test/consumer', 2000);
 ```
