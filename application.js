@@ -29,11 +29,11 @@ var kochvisio = {
   playing: false,
   socket: null,
 
-  initializePlayer(workerFile, webglMode, withDebugger, width, height) {
+  initializePlayer: function(webglMode, withDebugger, width, height) {
     if (!window.player) {
       window.player = new Player({
-        workerFile: workerFile,
-        useWorker: (workerFile) ? true : false,
+        workerFile: './vendor/javascripts/decoder.js',
+        useWorker: true,
         webgl: webglMode,
         size: {
           width: width,
@@ -50,7 +50,7 @@ var kochvisio = {
     }
   },
 
-  startStream(streamLink, reconnectTimeout) {
+  startStream: function(streamLink, reconnectTimeout) {
     kochvisio.socket = new WebSocket(streamLink);
     kochvisio.socket.binaryType = 'arraybuffer'
     kochvisio.playing = true;
@@ -85,7 +85,7 @@ var kochvisio = {
     }
   },
 
-  stopStream() {
+  stopStream: function() {
     if (kochvisio.socket) kochvisio.socket.close();
     clearTimeout(kochvisio.reconnectTimeout);
     kochvisio.playing = false;
